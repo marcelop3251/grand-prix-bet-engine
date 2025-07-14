@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: f1betting-postgres
+    environment:
+      POSTGRES_DB: f1betting
+      POSTGRES_USER: f1user
+      POSTGRES_PASSWORD: f1pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/db/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - f1betting-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U f1user -d f1betting"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: f1betting-app
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/f1betting
+      SPRING_DATASOURCE_USERNAME: f1user
+      SPRING_DATASOURCE_PASSWORD: f1pass
+    ports:
+      - "8080:8080"
+    networks:
+      - f1betting-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+
+networks:
+  f1betting-network:
+    driver: bridge 

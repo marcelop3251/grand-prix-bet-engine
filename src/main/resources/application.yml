@@ -1,0 +1,93 @@
+spring:
+  application:
+    name: f1-betting-engine
+  
+  profiles:
+    active: local
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/f1betting
+    username: f1user
+    password: f1pass
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migrations
+    validate-on-migrate: true
+    clean-disabled: true
+
+# OpenF1 API Configuration
+openf1:
+  base-url: https://api.openf1.org/v1
+  max-retries: 3
+
+# Application Configuration
+app:
+  betting:
+    initial-balance: 100.0
+    min-bet-amount: 1.0
+    max-bet-amount: 100.0
+    odds:
+      values: [2.0, 3.0, 4.0]
+
+
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    com.f1betting: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  packages-to-scan: com.f1betting.interfaces.rest
+
+---
+# Docker Profile
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:postgresql://postgres:5432/f1betting
+
+---
+ 
